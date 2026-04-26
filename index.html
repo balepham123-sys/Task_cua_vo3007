@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhiệm vụ ngày & lịch sử</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:white;
+}
+
+.container{
+    max-width:650px;
+    margin:20px auto;
+    padding:20px;
+    background:rgba(255,255,255,0.12);
+    border-radius:20px;
+    backdrop-filter:blur(12px);
+}
+
+h1{text-align:center}
+
+.task{
+    display:flex;
+    align-items:center;
+    padding:10px;
+    margin:6px 0;
+    background:rgba(255,255,255,0.15);
+    border-radius:10px;
+}
+
+.done{text-decoration:line-through;opacity:0.6}
+
+.btn{
+    margin:5px;
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    background:#00ffcc;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.progress{
+    height:10px;
+    background:#00ffcc;
+    border-radius:10px;
+    transition:0.3s;
+}
+
+.box{
+    background:rgba(255,255,255,0.1);
+    padding:10px;
+    border-radius:10px;
+    margin-top:15px;
+}
+
+/* lịch sử */
+.history{
+    margin-top:20px;
+}
+
+.item{
+    background:rgba(255,255,255,0.15);
+    padding:10px;
+    border-radius:10px;
+    margin:6px 0;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🌿 Nhiệm vụ hôm nay</h1>
+
+<div id="list"></div>
+
+<p id="score">⭐ Điểm: 0%</p>
+
+<div style="background:rgba(255,255,255,0.2);border-radius:10px;">
+<div class="progress" id="bar" style="width:0%"></div>
+</div>
+
+<br>
+
+<button class="btn" onclick="saveDay()">💾 Lưu ngày hôm nay</button>
+
+<div class="history">
+<h3>📅 Thành tích các ngày</h3>
+<div id="historyList"></div>
+</div>
+
+</div>
+
+<script>
+
+const tasks = [
+"Chụp 3 bữa (sáng, chiều, tối)",
+"Đi đường cẩn thận, đội mũ",
+"Ngủ sớm",
+"Mang kẹo",
+"Mang băng cá nhân",
+"Nghe nhạc thư giãn",
+"Mua món đồ thích",
+"Sống chậm lại",
+"Bên vợ ❤️"
+];
+
+// RESET THEO NGÀY
+const today = new Date().toLocaleDateString();
+
+let savedDate = localStorage.getItem("today");
+
+// nếu sang ngày mới → reset
+if(savedDate !== today){
+    localStorage.setItem("today", today);
+    localStorage.setItem("state", JSON.stringify(Array(tasks.length).fill(false)));
+}
+
+let state = JSON.parse(localStorage.getItem("state")) || Array(tasks.length).fill(false);
+
+// LỊCH SỬ
+let history = JSON.parse(localStorage.getItem("history")) || [];
+
+function render(){
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    let done = 0;
+
+    tasks.forEach((t,i)=>{
+        if(state[i]) done++;
+
+        list.innerHTML += `
+        <div class="task">
+            <input type="checkbox" ${state[i]?"checked":""} onchange="toggle(${i})">
+            <span class="${state[i]?'done':''}">${t}</span>
+        </div>`;
+    });
+
+    let percent = Math.round(done/tasks.length*100);
+
+    document.getElementById("score").innerText =
+    "⭐ Điểm hôm nay: " + percent + "%";
+
+    document.getElementById("bar").style.width = percent + "%";
+}
+
+function toggle(i){
+    state[i] = !state[i];
+    localStorage.setItem("state", JSON.stringify(state));
+    render();
+}
+
+function saveDay(){
+    let done = state.filter(x=>x).length;
+    let percent = Math.round(done/tasks.length*100);
+
+    history.unshift({
+        date: today,
+        score: percent
+    });
+
+    localStorage.setItem("history", JSON.stringify(history));
+
+    renderHistory();
+
+    alert("💾 Đã lưu thành tích hôm nay!");
+}
+
+function renderHistory(){
+    let box = document.getElementById("historyList");
+    box.innerHTML = "";
+
+    history.forEach(h=>{
+        box.innerHTML += `
+        <div class="item">
+            📅 ${h.date} — ⭐ ${h.score}%
+        </div>
+        `;
+    });
+}
+
+render();
+renderHistory();
+
+</script>
+
+</body>
+</html>
